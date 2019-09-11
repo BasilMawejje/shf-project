@@ -14,4 +14,10 @@ $(function() {
   $('#editUserStatusSubmit').click(function() {
     $('#editStatusModal').modal('hide');
   });
+
+  $('#currentPassword').focus(function(){
+    $('#adminPasswordModal').modal({
+       show: true
+    });
+  });
 });
