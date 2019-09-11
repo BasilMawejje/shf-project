@@ -1280,6 +1280,7 @@ sv:
         password_confirmation: *password_confirmation
         member_photo:
           pic_header: Redigera profilbild
+        modalTitle: Ange ditt administratörslösenord
 
     sessions:
       new:

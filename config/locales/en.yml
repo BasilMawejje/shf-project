@@ -1278,6 +1278,7 @@ en:
         password_confirmation: *password_confirmation
         member_photo:
           pic_header: Edit your picture
+        modalTitle: Enter your admin password
 
     sessions:
       new:
