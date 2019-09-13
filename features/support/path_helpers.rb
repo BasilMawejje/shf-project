@@ -82,6 +82,10 @@ module PathHelpers
         path = admin_only_edit_app_configuration_path(AdminOnly::AppConfiguration.config_to_use)
       when 'admin show app configuration'
         path = admin_only_app_configuration_path
+      when 'edit a user profile as the admin'
+       path = admin_only_user_profile_edit_path(user)
+     when 'admin become user'
+        path = admin_only_become_user_path(user)
       when 'cookies'
         path = cookies_path
 
