@@ -10,7 +10,7 @@ Then("I click {capture_string}") do |capture_string|
   visit admin_only_user_profile_edit_path(@user)
 end
 
-Then("I should see {capture_string}{optional_string}") do |capture_string, optional_string|
+Then(/^I should see "([^"]*)" page$/) do |arg|
   visit edit_user_registration_path(@user)
 end
 
