@@ -61,4 +61,4 @@ Feature: Admin sees password hint when they become a user
     And I click "Edit your profile"
     Then I should see "edit registration for a user" page
     And I focus on "Current password" field
-    Then I should see the text t(".modalTitle")
+    Then I should see the text t("devise.registrations.edit.modalTitle")
