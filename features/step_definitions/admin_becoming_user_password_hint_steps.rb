@@ -3,8 +3,8 @@ Given("I am on the {capture_string}{optional_string}{optional_string}{capture_st
 end
 
 Then("I should navigate to {capture_string}") do |capture_string|
-  login_as(id = 1)
-  visit user_path(id = 1)
+  login_as(User.find(1))
+  visit user_path(User.find(1))
 end
 
 Then("I click {capture_string}") do |capture_string|
