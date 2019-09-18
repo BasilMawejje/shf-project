@@ -1,9 +1,10 @@
 Given("I am on the {capture_string}{optional_string}{optional_string}{capture_string}") do |capture_string, optional_string, optional_string2, capture_string2|
-  visit admin_only_user_profile_edit_path(@user)
+  visit admin_only_user_profile_edit_path(id = 1)
 end
 
 Then("I should navigate to {capture_string}") do |capture_string|
-  visit admin_only_become_user_path(@user)
+  login_as(id = 1)
+  visit user_path(id = 1)
 end
 
 Then("I click {capture_string}") do |capture_string|
@@ -19,5 +20,5 @@ Then("I focus on {capture_string}{optional_string}") do |capture_string, optiona
 end
 
 Then("I should see the text {capture_string}") do |capture_string|
-  expect(page).to have_selector 'h5', text: "Ange ditt administratörslösenord"
+  expect(page).to have_selector 'h5', text: capture_string
 end

@@ -85,7 +85,7 @@ module PathHelpers
       when 'edit a user profile as the admin'
        path = admin_only_user_profile_edit_path(user)
      when 'admin become user'
-        path = admin_only_become_user_path(user)
+        path = user_path(user)
       when 'cookies'
         path = cookies_path
 
