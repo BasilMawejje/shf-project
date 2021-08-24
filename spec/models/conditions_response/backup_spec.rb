@@ -1304,6 +1304,17 @@ RSpec.describe Backup, type: :model do
       end
 
     end
+
+    describe 's3_lifecycle_rules(bucket, bucket_full_prefix, status, *storage_rules_kwargs)' do
+      # Will add tests for spike after I get .env file to setup test database
+      it 'returns nil for invalid storage classes' do
+        described_class
+        binding.pry
+      end
+
+      it 'returns the correct lifecycle rules transitions' do
+      end
+    end
   end
 
 end

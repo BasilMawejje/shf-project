@@ -287,6 +287,39 @@ class Backup < ConditionResponder
     end
   end
 
+  
+  STORAGE_CLASSES = %w(STANDARD_IA GLACIER DEEP_ARCHIVE)
+  
+  # method signature => s3_lifecycle_rules(string, string, string, {days: integer, storage_class: member class in STORAGE_CLASSES list})
+  # e.g s3_lifecycle_rules('bucket', 'bucket_full_prefix', 'enabled', {days: 30, storage_class: "STANDARD_IA"}, {days: 90, storage_class: "GLACIER"})
+  def self.s3_lifecycle_rules(bucket, bucket_full_prefix, status, *storage_rules_kwargs)
+    client = Aws::S3::Client.new(region: ENV['SHF_AWS_S3_BACKUP_REGION'],
+      credentials: Aws::Credentials.new(ENV['SHF_AWS_S3_BACKUP_KEY_ID'],
+                                        ENV['SHF_AWS_S3_BACKUP_SECRET_ACCESS_KEY']))
+                                        
+    unless (storage_rules_kwargs.map{|h| h.values.last} & STORAGE_CLASSES).empty? 
+      client.put_bucket_lifecycle_configuration({
+        bucket: bucket, 
+        lifecycle_configuration: {
+          rules: [
+            {
+              expiration: {
+                date: Time.now,
+                days: 365, 
+                expired_object_delete_marker: false,
+              },
+              filter: {
+                prefix: bucket_full_prefix, 
+              }, 
+              id: ENV['SHF_AWS_S3_BACKUP_KEY_ID'], 
+              status: status.capitalize, # String showing 'Enabled' or 'Disabled'
+              transitions: storage_rules_kwargs
+            }
+          ]
+        }
+      })  
+    end
+  end
 
   # Record the error and additional_info to the given log
   # and send a Slack notification if we are using Slack notifications
