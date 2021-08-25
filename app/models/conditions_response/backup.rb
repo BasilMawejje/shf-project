@@ -289,15 +289,16 @@ class Backup < ConditionResponder
 
   
   STORAGE_CLASSES = %w(STANDARD_IA GLACIER DEEP_ARCHIVE)
-  
+  define_method(:storage_class_is_valid?) {|storage_class_list| !(storage_class_list & STORAGE_CLASSES).empty? ? true : "Invalid storage class"}
+
   # method signature => s3_lifecycle_rules(string, string, string, {days: integer, storage_class: upcase string in STORAGE_CLASSES list})
   # e.g s3_lifecycle_rules('bucket', 'bucket_full_prefix', 'enabled', {days: 30, storage_class: "STANDARD_IA"}, {days: 90, storage_class: "GLACIER"})
   def self.s3_lifecycle_rules(bucket, bucket_full_prefix, status, *storage_rules_kwargs)
-    client = Aws::S3::Client.new(region: ENV['SHF_AWS_S3_BACKUP_REGION'],
-      credentials: Aws::Credentials.new(ENV['SHF_AWS_S3_BACKUP_KEY_ID'],
-                                        ENV['SHF_AWS_S3_BACKUP_SECRET_ACCESS_KEY']))
-                                        
-    unless (storage_rules_kwargs.map{|h| h.values.last} & STORAGE_CLASSES).empty? 
+    client = Aws::S3::Client.new(region: ENV['SHF_AWS_S3_BACKUP_REGION'], 
+      credentials: Aws::Credentials.new(ENV['SHF_AWS_S3_BACKUP_KEY_ID'], qENV['SHF_AWS_S3_BACKUP_SECRET_ACCESS_KEY']))
+
+    storage_class_list = storage_rules_kwargs.map{|h| h.values.last}
+    unless storage_class_is_valid? storage_class_list
       client.put_bucket_lifecycle_configuration({
         bucket: bucket, 
         lifecycle_configuration: {
