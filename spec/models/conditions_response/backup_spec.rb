@@ -1306,11 +1306,23 @@ RSpec.describe Backup, type: :model do
     end
 
     describe 's3_lifecycle_rules(bucket, bucket_full_prefix, status, *storage_rules_kwargs)' do
-      it "returns 'Invalid storage class' for invalid storage classes" do
-        binding.pry
+      let(:invalid_storage_class_list) { ["INVALID_STORAGE_CLASS", "OTHER_INVALID_STORAGE_CLASS"] }
+      let(:another_invalid_storage_class_list) { ["INVALID_STORAGE_CLASS", "STANDARD_IA", "GLACIER"] }
+      
+      it "returns 'Invalid storage class' for a list containing only invalid storage classes" do
+        expect(described_class.storage_class_is_valid? invalid_storage_class_list).to eq("Invalid storage class")
+      end
+
+      it "returns 'Invalid storage class' for a list containing both valid and invalid storage classes" do
+        expect(described_class.storage_class_is_valid? another_invalid_storage_class_list).to eq("Invalid storage class")
+      end
+
+      it "fails for empty storage classes list" do
+        expect(described_class.storage_class_is_valid? []).to eq("Empty storage class")
       end
 
       it 'returns the correct lifecycle rules transitions' do
+        #TODO: Add this test
       end
     end
   end
