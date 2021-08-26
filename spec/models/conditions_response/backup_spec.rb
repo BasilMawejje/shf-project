@@ -10,7 +10,6 @@ RSpec.describe Backup, type: :model do
   let(:mock_bucket_object) { double('Aws::S3::Object', upload_file: true) }
   let(:mock_bucket) { double('Aws::S3::Bucket', object: mock_bucket_object) }
   let(:mock_s3) { double('Aws::S3::Resource', bucket: mock_bucket) }
-  let(:mock_s3_client) { instance_double('Aws::S3::Client') }
   let(:bucket_name) { 'bucket_name' }
   let(:bucket_full_prefix) { 'bucket/top/prefix' }
 
