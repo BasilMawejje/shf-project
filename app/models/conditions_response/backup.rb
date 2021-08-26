@@ -299,13 +299,12 @@ class Backup < ConditionResponder
     end
   end
 
-  # method signature => s3_lifecycle_rules(string, string, string, {days: integer, storage_class: upcase string in STORAGE_CLASSES list})
-  # e.g s3_lifecycle_rules('bucket', 'bucket_full_prefix', 'enabled', {days: 30, storage_class: "STANDARD_IA"}, {days: 90, storage_class: "GLACIER"})
+  # s3_lifecycle_rules('bucket', 'bucket_full_prefix', 'enabled', {days: 30, storage_class: 'STANDARD_IA'}, {days: 90, storage_class: 'GLACIER'})
   def self.s3_lifecycle_rules(bucket, bucket_full_prefix, status, *storage_rules_kwargs)
     client = Aws::S3::Client.new(region: ENV['SHF_AWS_S3_BACKUP_REGION'], 
       credentials: Aws::Credentials.new(ENV['SHF_AWS_S3_BACKUP_KEY_ID'], ENV['SHF_AWS_S3_BACKUP_SECRET_ACCESS_KEY']))
 
-    storage_class_list = storage_rules_kwargs.map{|h| h.values.last}
+    storage_class_list = storage_rules_kwargs.flatten.map{|h| h.values.last}
     unless storage_class_is_valid? storage_class_list
       client.put_bucket_lifecycle_configuration({
         bucket: bucket, 
@@ -321,7 +320,7 @@ class Backup < ConditionResponder
                 prefix: bucket_full_prefix
               }, 
               id: ENV['SHF_AWS_S3_BACKUP_KEY_ID'], 
-              status: status.capitalize, # String showing 'Enabled' or 'Disabled'
+              status: status.capitalize,
               transitions: storage_rules_kwargs
             }
           ]

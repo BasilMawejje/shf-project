@@ -10,6 +10,7 @@ RSpec.describe Backup, type: :model do
   let(:mock_bucket_object) { double('Aws::S3::Object', upload_file: true) }
   let(:mock_bucket) { double('Aws::S3::Bucket', object: mock_bucket_object) }
   let(:mock_s3) { double('Aws::S3::Resource', bucket: mock_bucket) }
+  let(:mock_s3_client) { instance_double('Aws::S3::Client') }
   let(:bucket_name) { 'bucket_name' }
   let(:bucket_full_prefix) { 'bucket/top/prefix' }
 
@@ -1306,8 +1307,21 @@ RSpec.describe Backup, type: :model do
     end
 
     describe 's3_lifecycle_rules(bucket, bucket_full_prefix, status, *storage_rules_kwargs)' do
-      let(:invalid_storage_class_list) { ["INVALID_STORAGE_CLASS", "OTHER_INVALID_STORAGE_CLASS"] }
-      let(:another_invalid_storage_class_list) { ["INVALID_STORAGE_CLASS", "STANDARD_IA", "GLACIER"] }
+      let(:invalid_storage_class_list) { ['INVALID_STORAGE_CLASS', 'OTHER_INVALID_STORAGE_CLASS'] }
+      let(:another_invalid_storage_class_list) { ['INVALID_STORAGE_CLASS', 'STANDARD_IA', 'GLACIER'] }
+      let(:status) { 'Enabled' }
+      let(:storage_rules) { [{days: 30, storage_class: 'STANDARD_IA'}, {days: 90, storage_class: 'GLACIER'}] }
+
+      let(:mock_s3_client) do
+        client = Aws::S3::Client.new(stub_responses: true)
+        client.stub_responses(
+          :put_bucket_lifecycle_configuration, ->(context) {
+            bucket = context.params[:bucket]
+            lifecycle_configuration = context.params[:lifecycle_configuration][:rules]
+          }
+        )
+        client
+      end
       
       it "returns 'Invalid storage class' for a list containing only invalid storage classes" do
         expect(described_class.storage_class_is_valid? invalid_storage_class_list).to eq("Invalid storage class")
@@ -1317,12 +1331,18 @@ RSpec.describe Backup, type: :model do
         expect(described_class.storage_class_is_valid? another_invalid_storage_class_list).to eq("Invalid storage class")
       end
 
-      it "fails for empty storage classes list" do
+      it "returns 'Empty storage class' for empty storage classes list" do
         expect(described_class.storage_class_is_valid? []).to eq("Empty storage class")
       end
 
       it 'returns the correct lifecycle rules transitions' do
-        #TODO: Add this test
+        put_lifecycle_data = mock_s3_client.put_bucket_lifecycle_configuration(bucket: bucket_name, lifecycle_configuration: {rules: [{status: status, transitions: storage_rules}]})
+        expect(mock_s3_client).to receive(:get_bucket_lifecycle_configuration).with({bucket: bucket_name}).and_return(put_lifecycle_data)
+        obj = mock_s3_client.get_bucket_lifecycle_configuration(bucket: bucket_name)
+
+        expect(obj[0][:status]).to eq 'Enabled'
+        expect(obj[0][:transitions].count).to eq 2
+        expect(obj[0][:transitions]).to eq [{days: 30, storage_class: 'STANDARD_IA'}, {days: 90, storage_class: 'GLACIER'}]
       end
     end
   end
