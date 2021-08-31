@@ -304,7 +304,7 @@ class Backup < ConditionResponder
     client = Aws::S3::Client.new(region: ENV['SHF_AWS_S3_BACKUP_REGION'], 
       credentials: Aws::Credentials.new(ENV['SHF_AWS_S3_BACKUP_KEY_ID'], ENV['SHF_AWS_S3_BACKUP_SECRET_ACCESS_KEY']))
 
-    storage_class_list = storage_rules.map{|h| h.values.last}
+    storage_class_list = storage_rules.flatten.map{|h| h.values.last}
     unless storage_class_is_valid? storage_class_list
       client.put_bucket_lifecycle_configuration({
         bucket: bucket, 

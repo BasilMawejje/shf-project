@@ -1335,13 +1335,33 @@ RSpec.describe Backup, type: :model do
       end
 
       it 'returns the correct lifecycle rules transitions' do
-        put_lifecycle_data = mock_s3_client.put_bucket_lifecycle_configuration(bucket: bucket_name, lifecycle_configuration: {rules: [{status: status, transitions: storage_rules}]})
-        expect(mock_s3_client).to receive(:get_bucket_lifecycle_configuration).with({bucket: bucket_name}).and_return(put_lifecycle_data)
-        obj = mock_s3_client.get_bucket_lifecycle_configuration(bucket: bucket_name)
+        put_mock_data = mock_s3_client.put_bucket_lifecycle_configuration(
+          bucket: bucket_name,
+          lifecycle_configuration: {
+            rules: [
+              {
+                expiration: {
+                  days: 365
+                }, 
+                filter: {
+                  prefix: bucket_full_prefix
+                }, 
+                id: "TestOnly", 
+                status: status, 
+                transitions: storage_rules
+              }
+            ]
+          }
+        )
+        
+        expect(mock_s3_client).to receive(:get_bucket_lifecycle_configuration).with({bucket: bucket_name}).and_return(put_mock_data)
+        get_mock_data = mock_s3_client.get_bucket_lifecycle_configuration(bucket: bucket_name)
 
-        expect(obj[0][:status]).to eq 'Enabled'
-        expect(obj[0][:transitions].count).to eq 2
-        expect(obj[0][:transitions]).to eq [{days: 30, storage_class: 'STANDARD_IA'}, {days: 90, storage_class: 'GLACIER'}]
+        expect(get_mock_data[0][:id]).to eq 'TestOnly'
+        expect(get_mock_data[0][:status]).to eq 'Enabled'
+        expect(get_mock_data[0][:filter][:prefix]).to eq 'bucket/top/prefix'
+        expect(get_mock_data[0][:transitions].count).to eq 2
+        expect(get_mock_data[0][:transitions]).to eq [{days: 30, storage_class: 'STANDARD_IA'}, {days: 90, storage_class: 'GLACIER'}]
       end
     end
   end
