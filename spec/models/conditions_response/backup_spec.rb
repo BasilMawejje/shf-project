@@ -1321,6 +1321,11 @@ RSpec.describe Backup, type: :model do
         )
         client
       end
+
+      it 'calls #s3_lifecycle_rules once' do
+        expect(described_class).to receive(:s3_lifecycle_rules).with(bucket_name, bucket_full_prefix, status, storage_rules)
+        described_class.s3_lifecycle_rules(bucket_name, bucket_full_prefix, status, storage_rules)
+      end
       
       it "returns 'Invalid storage class' for a list containing only invalid storage classes" do
         expect(described_class.storage_class_is_valid? invalid_storage_class_list).to eq("Invalid storage class")
@@ -1346,7 +1351,7 @@ RSpec.describe Backup, type: :model do
                 filter: {
                   prefix: bucket_full_prefix
                 }, 
-                id: "TestOnly", 
+                id: 'TestOnly', 
                 status: status, 
                 transitions: storage_rules
               }
