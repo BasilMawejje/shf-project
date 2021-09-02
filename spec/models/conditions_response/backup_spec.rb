@@ -1310,6 +1310,7 @@ RSpec.describe Backup, type: :model do
       let(:another_invalid_storage_class_list) { ['INVALID_STORAGE_CLASS', 'STANDARD_IA', 'GLACIER'] }
       let(:status) { 'Enabled' }
       let(:storage_rules) { [{days: 30, storage_class: 'STANDARD_IA'}, {days: 90, storage_class: 'GLACIER'}] }
+      let(:stub_s3_client) { double('Aws::S3::Client', bucket: mock_bucket) }
 
       let(:mock_s3_client) do
         client = Aws::S3::Client.new(stub_responses: true)
@@ -1323,8 +1324,8 @@ RSpec.describe Backup, type: :model do
       end
 
       it 'calls #s3_lifecycle_rules once' do
-        expect(described_class).to receive(:s3_lifecycle_rules).with(bucket_name, bucket_full_prefix, status, storage_rules)
-        described_class.s3_lifecycle_rules(bucket_name, bucket_full_prefix, status, storage_rules)
+        expect(described_class).to receive(:s3_lifecycle_rules).with(bucket_name: bucket_name, bucket_full_prefix: bucket_full_prefix, status: status, storage_rules: storage_rules)
+        described_class.s3_lifecycle_rules(bucket_name: bucket_name, bucket_full_prefix: bucket_full_prefix, status: status, storage_rules: storage_rules)
       end
       
       it "returns 'Invalid storage class' for a list containing only invalid storage classes" do
@@ -1359,8 +1360,8 @@ RSpec.describe Backup, type: :model do
           }
         )
         
-        expect(mock_s3_client).to receive(:get_bucket_lifecycle_configuration).with({bucket: bucket_name}).and_return(put_mock_data)
-        get_mock_data = mock_s3_client.get_bucket_lifecycle_configuration(bucket: bucket_name)
+        allow(stub_s3_client).to receive(:get_bucket_lifecycle_configuration).with({bucket: bucket_name}).and_return(put_mock_data)
+        get_mock_data = stub_s3_client.get_bucket_lifecycle_configuration(bucket: bucket_name)
 
         expect(get_mock_data[0][:id]).to eq 'TestOnly'
         expect(get_mock_data[0][:status]).to eq 'Enabled'

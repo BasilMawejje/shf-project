@@ -299,15 +299,15 @@ class Backup < ConditionResponder
     end
   end
 
-  # s3_lifecycle_rules('bucket', 'bucket_full_prefix', 'enabled', [{days: 30, storage_class: 'STANDARD_IA'}, {days: 90, storage_class: 'GLACIER'}])
-  def self.s3_lifecycle_rules(bucket, bucket_full_prefix, status, *storage_rules)
+  # s3_lifecycle_rules(bucket_name: 'bucket_name', bucket_full_prefix: 'bucket_full_prefix', status: 'enabled', storage_rules: [{days: 30, storage_class: 'STANDARD_IA'}, {days: 90, storage_class: 'GLACIER'}])
+  def self.s3_lifecycle_rules(bucket_name:, bucket_full_prefix:, status:, storage_rules:)
     client = Aws::S3::Client.new(region: ENV['SHF_AWS_S3_BACKUP_REGION'], 
       credentials: Aws::Credentials.new(ENV['SHF_AWS_S3_BACKUP_KEY_ID'], ENV['SHF_AWS_S3_BACKUP_SECRET_ACCESS_KEY']))
 
     storage_class_list = storage_rules.flatten.map{|h| h.values.last}
     unless storage_class_is_valid? storage_class_list
       client.put_bucket_lifecycle_configuration({
-        bucket: bucket, 
+        bucket: bucket_name, 
         lifecycle_configuration: {
           rules: [
             {
