@@ -692,7 +692,6 @@ RSpec.describe Backup, type: :model do
       let!(:temp_backups_dir) { Dir.mktmpdir('faux-backups-dir') }
       let!(:faux_backup_fn) { create_faux_backup_file(temp_backups_dir, 'faux_backup.bak') }
 
-
       it '.upload_file_to_s3 calls .upload_file for the bucket, full object name, and file to upload' do
         expect(mock_bucket_object).to receive(:upload_file).with(faux_backup_fn, anything)
         Backup.upload_file_to_s3(mock_s3, bucket_name, bucket_full_prefix, faux_backup_fn)
@@ -1251,7 +1250,9 @@ RSpec.describe Backup, type: :model do
 
 
     describe 'iterate_and_log_notify_errors(list, slack_error_details, log)' do
-
+      let(:status) { 'Enabled' }
+      let(:storage_rules) { [{days: 30, storage_class: 'STANDARD_IA'}, {days: 90, storage_class: 'GLACIER'}] }
+      
       before(:each) do
         allow(SHFNotifySlack).to receive(:failure_notification)
                                      .with(anything, anything)
@@ -1303,9 +1304,14 @@ RSpec.describe Backup, type: :model do
         expect(@result_str).to eq 'ac'
       end
 
+      it 'adds a bucket lifecycle policy to the object' do
+        expect(described_class).to receive(:set_s3_lifecycle_rules).with(bucket_name: bucket_name, bucket_full_prefix: bucket_full_prefix, status: status, storage_rules: storage_rules)
+        described_class.set_s3_lifecycle_rules(bucket_name: bucket_name, bucket_full_prefix: bucket_full_prefix, status: status, storage_rules: storage_rules)
+      end
+
     end
 
-    describe 's3_lifecycle_rules(bucket, bucket_full_prefix, status, *storage_rules_kwargs)' do
+    describe 'set_s3_lifecycle_rules(bucket, bucket_full_prefix, status, *storage_rules_kwargs)' do
       let(:invalid_storage_class_list) { ['INVALID_STORAGE_CLASS', 'OTHER_INVALID_STORAGE_CLASS'] }
       let(:another_invalid_storage_class_list) { ['INVALID_STORAGE_CLASS', 'STANDARD_IA', 'GLACIER'] }
       let(:status) { 'Enabled' }
@@ -1323,9 +1329,9 @@ RSpec.describe Backup, type: :model do
         client
       end
 
-      it 'calls #s3_lifecycle_rules once' do
-        expect(described_class).to receive(:s3_lifecycle_rules).with(bucket_name: bucket_name, bucket_full_prefix: bucket_full_prefix, status: status, storage_rules: storage_rules)
-        described_class.s3_lifecycle_rules(bucket_name: bucket_name, bucket_full_prefix: bucket_full_prefix, status: status, storage_rules: storage_rules)
+      it 'calls #set_s3_lifecycle_rules once' do
+        expect(described_class).to receive(:set_s3_lifecycle_rules).with(bucket_name: bucket_name, bucket_full_prefix: bucket_full_prefix, status: status, storage_rules: storage_rules)
+        described_class.set_s3_lifecycle_rules(bucket_name: bucket_name, bucket_full_prefix: bucket_full_prefix, status: status, storage_rules: storage_rules)
       end
       
       it "returns 'Invalid storage class' for a list containing only invalid storage classes" do
