@@ -58,6 +58,8 @@ class User < ApplicationRecord
 
   validates :first_name, :last_name, presence: true, unless: :updating_without_name_changes
   validates :membership_number, uniqueness: true, allow_blank: true
+  validates :email, email: true
+
 
   THIS_PAYMENT_TYPE = Payment::PAYMENT_TYPE_MEMBER
   MOST_RECENT_UPLOAD_METHOD = :created_at
@@ -71,12 +73,14 @@ class User < ApplicationRecord
   successful_payment_with_type_and_expire_date = "payments.status = '#{Payment::SUCCESSFUL}' AND" +
     " payments.payment_type = ? AND payments.expire_date = ?"
 
+  # FIXME: this should use the Membership(s) for the users
   scope :membership_expires_in_x_days, -> (num_days) { includes(:payments)
                                                          .where(successful_payment_with_type_and_expire_date,
                                                                 Payment::PAYMENT_TYPE_MEMBER,
                                                                 (Date.current + num_days))
                                                          .order('payments.expire_date')
                                                          .references(:payments) }
+
 
   scope :company_hbrand_expires_in_x_days, -> (num_days) { includes(:payments)
                                                              .where(successful_payment_with_type_and_expire_date,

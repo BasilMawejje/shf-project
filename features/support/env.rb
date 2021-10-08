@@ -86,7 +86,7 @@ Capybara.register_driver :selenium_browser do |app|
       browser: :chrome
   )
 end
-# register this driver so that ShowMeTheCookies knows which adapater to use for it
+# register this driver so that ShowMeTheCookies knows which adapter to use for it
 #   have to use the same driver name (symbol)
 ShowMeTheCookies.register_adapter(:selenium_browser, ShowMeTheCookies::SeleniumChrome)
 
@@ -126,8 +126,10 @@ def path_with_locale(visit_path)
   "/#{I18n.locale}#{visit_path}"
 end
 
-def i18n_content(content, locale=I18n.locale)
-  I18n.t(content, locale)
+# As of version 1.8.6, I18n.translate will no longer accept a Hash as the 2nd argument.
+# See I18n.translate
+def i18n_content(content, translation_params = {})
+  I18n.t(content, **({locale: I18n.locale}.merge(translation_params)) )
 end
 
 

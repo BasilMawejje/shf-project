@@ -2,11 +2,11 @@ source 'https://rubygems.org'
 ruby '2.6.6'
 
 gem 'dotenv-rails'
-gem 'rails', '~> 5.2'
+gem 'rails', '~> 5.2.6'
 gem 'bootsnap', require: false
 
 gem 'pg', '~> 1.2'
-gem 'puma', '~> 5.0'
+gem 'puma', '~> 5.3'
 gem 'sass-rails'
 
 gem 'uglifier', '>= 1.3.0'
@@ -96,6 +96,10 @@ gem 'whenever', require: false
 
 # Query ActiveRecord by time (ex:  Payment.by_year(2019), Payment.between_times(Time.zone.now - 3.hours, Time.zone.now)) # all posts in last 3 hours
 gem 'by_star'
+
+
+# This is used by capybara, webmock, and more.  It is listed here only so we can specify the version that addresses a security vulnerability. (see entry in Github advisory db: https://github.com/advisories/GHSA-jxhc-q857-3j6g)
+gem 'addressable', '>= 2.8.0'
 
 
 group :development, :test do
