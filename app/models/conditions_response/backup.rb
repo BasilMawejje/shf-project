@@ -86,13 +86,8 @@ class Backup < ConditionResponder
 
     iterate_and_log_notify_errors(backup_files, 'in backup_files loop, uploading_file_to_s3', log) do |backup_file|
       upload_file_to_s3(aws_s3, aws_s3_backup_bucket, aws_backup_bucket_full_prefix, backup_file)
-      # When we first upload our file to s3, the default storage class is STANDARD
-      # After 1 month, we want to to transition the object to STANDARD IA, 
-      # then GLACIER after 3 months. This can be changed to meet our needs.
-      # This will help us save on costs.
-      # This however has effects on retrieval time for objects which you can see in the link below
-      # https://aws.amazon.com/s3/storage-classes/#Performance_across_the_S3_Storage_Classes
-      set_s3_lifecycle_rules(bucket_name: aws_s3_backup_bucket, bucket_full_prefix: aws_backup_bucket_full_prefix, status: 'enabled', storage_rules: [{days: 30, storage_class: 'STANDARD_IA'}, {days: 90, storage_class: 'GLACIER'}])
+      # When we first upload our file to s3, the default storage class is STANDARD_IA
+      set_s3_lifecycle_rules(bucket_name: aws_s3_backup_bucket, bucket_full_prefix: aws_backup_bucket_full_prefix, status: 'enabled', storage_rules: [{days: 90, storage_class: 'GLACIER'}, {days: 450, storage_class: 'DEEP_ARCHIVE'}])
     end
 
     log.record('info', 'Pruning older backups on local storage')
@@ -149,7 +144,7 @@ class Backup < ConditionResponder
   # @see https://aws.amazon.com/blogs/developer/uploading-files-to-amazon-s3/
   def self.upload_file_to_s3(s3, bucket, bucket_folder, file)
     obj = s3.bucket(bucket).object(bucket_folder + File.basename(file))
-    obj.upload_file(file, { tagging: aws_date_tags })
+    obj.upload_file(file, { tagging: aws_date_tags, storage_class: 'STANDARD_IA' })
   end
 
 
@@ -295,7 +290,7 @@ class Backup < ConditionResponder
   end
 
   
-  STORAGE_CLASSES = %w(STANDARD_IA GLACIER DEEP_ARCHIVE).freeze
+  STORAGE_CLASSES = %w(GLACIER DEEP_ARCHIVE).freeze
   class << self
     define_method(:storage_class_is_valid?) do |storage_class_list| 
       unless storage_class_list.empty?
@@ -306,7 +301,7 @@ class Backup < ConditionResponder
     end
   end
 
-  # s3_lifecycle_rules(bucket_name: 'bucket_name', bucket_full_prefix: 'bucket_full_prefix', status: 'enabled', storage_rules: [{days: 30, storage_class: 'STANDARD_IA'}, {days: 90, storage_class: 'GLACIER'}])
+  # s3_lifecycle_rules(bucket_name: 'bucket_name', bucket_full_prefix: 'bucket_full_prefix', status: 'enabled', storage_rules: [{days: 90, storage_class: 'GLACIER'}, {days: 450, storage_class: 'DEEP_ARCHIVE'}])
   def self.set_s3_lifecycle_rules(bucket_name:, bucket_full_prefix:, status:, storage_rules:)
     client = Aws::S3::Client.new(region: ENV['SHF_AWS_S3_BACKUP_REGION'], 
       credentials: Aws::Credentials.new(ENV['SHF_AWS_S3_BACKUP_KEY_ID'], ENV['SHF_AWS_S3_BACKUP_SECRET_ACCESS_KEY']))
@@ -319,8 +314,9 @@ class Backup < ConditionResponder
           rules: [
             {
               expiration: {
+                # Expire objects after 10 years
                 date: Time.now,
-                days: 365, 
+                days: 3650, 
                 expired_object_delete_marker: false
               },
               filter: {

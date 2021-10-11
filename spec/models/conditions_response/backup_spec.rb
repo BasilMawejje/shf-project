@@ -699,10 +699,10 @@ RSpec.describe Backup, type: :model do
         FileUtils.remove_entry(temp_backups_dir, true)
       end
 
-      it 'adds date tags to the object' do
+      it 'adds date tags and STANDARD_IA storage class to the object' do
         expect(mock_bucket_object).to receive(:upload_file)
                                        .with(faux_backup_fn,
-                                             {tagging: 'this is the tagging string'})
+                                        {storage_class: 'STANDARD_IA', tagging: 'this is the tagging string'})
 
         expect(described_class).to receive(:aws_date_tags).and_return('this is the tagging string')
         Backup.upload_file_to_s3(mock_s3, bucket_name, bucket_full_prefix, faux_backup_fn)
@@ -1372,6 +1372,7 @@ RSpec.describe Backup, type: :model do
         expect(get_mock_data[0][:id]).to eq 'TestOnly'
         expect(get_mock_data[0][:status]).to eq 'Enabled'
         expect(get_mock_data[0][:filter][:prefix]).to eq 'bucket/top/prefix'
+        expect(get_mock_data[0][:expiration][:days]).to eq 365
         expect(get_mock_data[0][:transitions].count).to eq 2
         expect(get_mock_data[0][:transitions]).to eq [{days: 30, storage_class: 'STANDARD_IA'}, {days: 90, storage_class: 'GLACIER'}]
       end
