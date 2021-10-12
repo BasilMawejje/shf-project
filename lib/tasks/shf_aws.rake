@@ -128,6 +128,42 @@ namespace :shf do
       tags_array = tags_string.split('&').map { |t| t.split('=') }
       tags_array.to_h.map { |k, v| { key: k, value: v } }
     end
+
+    desc "add lifecycle rules to s3 bucket"
+    task :bucket_lifecycle_config => :environment do 
+      # Not using arguments since we are aware before hand what transitions objects in a bucket make. See https://github.com/AgileVentures/shf-project/wiki/Backups-on-AWS
+      # We can make this task dynamic if the need arises.
+      # This simplifies our rake task syntax in the terminal.
+      aws_s3 = Backup.s3_backup_resource
+      aws_client = aws_s3.client
+      aws_s3_backup_bucket_name = Backup.s3_backup_bucket
+      aws_s3_backup_bucket_full_prefix = Backup.s3_backup_bucket_full_prefix
+      aws_s3_backup_bucket_id = Backup.__id__
+      
+      storage_rules = [{days: 90, storage_class: 'GLACIER'}, {days: 450, storage_class: 'DEEP_ARCHIVE'}]
+
+      aws_client.put_bucket_lifecycle_configuration({
+        bucket: aws_s3_backup_bucket_name, 
+        lifecycle_configuration: {
+          rules: [
+            {
+              expiration: {
+                date: Time.now,
+                days: 3650, 
+                expired_object_delete_marker: false
+              },
+              id: aws_s3_backup_bucket_id.to_s,
+              prefix: aws_s3_backup_bucket_full_prefix,
+              filter: {
+                prefix: aws_s3_backup_bucket_full_prefix
+              }, 
+              status: 'Enabled',
+              transitions: storage_rules
+            }
+          ]
+        }
+      })
+    end
   end
 end
 
