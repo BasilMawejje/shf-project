@@ -142,7 +142,7 @@ class Backup < ConditionResponder
   # @see https://aws.amazon.com/blogs/developer/uploading-files-to-amazon-s3/
   def self.upload_file_to_s3(s3, bucket, bucket_folder, file)
     obj = s3.bucket(bucket).object(bucket_folder + File.basename(file))
-    obj.upload_file(file, { tagging: aws_date_tags })
+    obj.upload_file(file, { tagging: aws_date_tags, storage_class: 'STANDARD_IA' })
   end
 
 
