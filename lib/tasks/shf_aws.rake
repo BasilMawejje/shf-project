@@ -142,27 +142,31 @@ namespace :shf do
       
       storage_rules = [{days: 90, storage_class: 'GLACIER'}, {days: 450, storage_class: 'DEEP_ARCHIVE'}]
 
-      aws_client.put_bucket_lifecycle_configuration({
-        bucket: aws_s3_backup_bucket_name, 
-        lifecycle_configuration: {
-          rules: [
-            {
-              expiration: {
-                date: Time.now,
-                days: 3650, 
-                expired_object_delete_marker: false
-              },
-              id: aws_s3_backup_bucket_id.to_s,
-              prefix: aws_s3_backup_bucket_full_prefix,
-              filter: {
-                prefix: aws_s3_backup_bucket_full_prefix
-              }, 
-              status: 'Enabled',
-              transitions: storage_rules
-            }
-          ]
-        }
-      })
+      ActivityLogger.open(LogfileNamer.name_for(LOGFILENAME), LOG_FACILITY, 'Add bucket lifecycle configuration') do |log|
+        aws_client.put_bucket_lifecycle_configuration({
+          bucket: aws_s3_backup_bucket_name, 
+          lifecycle_configuration: {
+            rules: [
+              {
+                expiration: {
+                  date: Time.now,
+                  days: 3650, 
+                  expired_object_delete_marker: false
+                },
+                id: aws_s3_backup_bucket_id.to_s,
+                prefix: aws_s3_backup_bucket_full_prefix,
+                filter: {
+                  prefix: aws_s3_backup_bucket_full_prefix
+                }, 
+                status: 'Enabled',
+                transitions: storage_rules
+              }
+            ]
+          }
+        })
+
+        log.info("Lifecycle configuration added for #{aws_s3_backup_bucket_name}")
+      end
     end
   end
 end
