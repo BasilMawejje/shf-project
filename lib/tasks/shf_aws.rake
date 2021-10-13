@@ -136,26 +136,21 @@ namespace :shf do
       # This simplifies our rake task syntax in the terminal.
       aws_s3 = Backup.s3_backup_resource
       aws_client = aws_s3.client
-      aws_s3_backup_bucket_name = Backup.s3_backup_bucket
+      aws_s3_backup_bucket_name = "shf-test-backups"
       aws_s3_backup_bucket_full_prefix = Backup.s3_backup_bucket_full_prefix
       
       storage_rules = [{days: 90, storage_class: 'GLACIER'}, {days: 450, storage_class: 'DEEP_ARCHIVE'}]
 
       ActivityLogger.open(LogfileNamer.name_for(LOGFILENAME), LOG_FACILITY, 'Add bucket lifecycle configuration') do |log|
-        # TODO: Fix error below
-        # Aws::S3::Errors::MalformedXML: The XML you provided was not well-formed or did not validate against our published schema
         aws_client.put_bucket_lifecycle_configuration({
           bucket: aws_s3_backup_bucket_name, 
           lifecycle_configuration: {
             rules: [
               {
                 expiration: {
-                  date: Time.now,
-                  days: 3650, 
-                  expired_object_delete_marker: false
+                  days: 3650
                 },
                 id: "Transition objects to GLACIER after 90 days then move them to DEEP_ARCHIVE after 450 days",
-                prefix: aws_s3_backup_bucket_full_prefix,
                 filter: {
                   prefix: aws_s3_backup_bucket_full_prefix
                 }, 
