@@ -136,10 +136,13 @@ namespace :shf do
       # This simplifies our rake task syntax in the terminal.
       aws_s3 = Backup.s3_backup_resource
       aws_client = aws_s3.client
-      aws_s3_backup_bucket_name = "shf-test-backups" # Remember to revert to production bucket
+      aws_s3_backup_bucket_name = Backup.s3_backup_bucket # Remember to revert to production bucket
       aws_s3_backup_bucket_full_prefix = Backup.s3_backup_bucket_full_prefix
-      
-      storage_rules = [{days: 90, storage_class: 'GLACIER'}, {days: 450, storage_class: 'DEEP_ARCHIVE'}]
+      # year = (aws_s3_backup_bucket_full_prefix.split('/')[1]
+      # current_month = aws_s3_backup_bucket_full_prefix.split('/')[2]
+      # prev_month = (aws_s3_backup_bucket_full_prefix.split('/')[2].to_i - 1).to_s
+      # day = (aws_s3_backup_bucket_full_prefix.split('/')[3]
+      # binding.pry
 
       ActivityLogger.open(LogfileNamer.name_for(LOGFILENAME), LOG_FACILITY, 'Add bucket lifecycle configuration') do |log|
         aws_client.put_bucket_lifecycle_configuration({
@@ -147,20 +150,65 @@ namespace :shf do
           lifecycle_configuration: {
             rules: [
               {
+                filter: {
+                  prefix: aws_s3_backup_bucket_full_prefix, 
+                }, 
+                id: 'Daily backup schedule',
+                status: 'Enabled', 
+                transitions: [
+                  {
+                    days: 60, 
+                    storage_class: 'STANDARD_IA',
+                  }, 
+                ], 
+              },
+              {
+                expiration: {
+                  days: 366, 
+                }, 
+                id: 'Monthly backup schedule', 
+                filter: {
+                  tag: {
+                    key: 'date-month-day',
+                    value: '1'
+                  }
+                }, 
+                status: 'Enabled', 
+                transitions: [
+                  {
+                    days: 90, 
+                    storage_class: 'GLACIER', 
+                  }
+                ]
+              }, 
+              {
                 expiration: {
                   days: 3650
                 },
-                id: "Transition objects to GLACIER after 90 days then move them to DEEP_ARCHIVE after 450 days",
+                id: 'Yearly backup schedule',
                 filter: {
-                  prefix: aws_s3_backup_bucket_full_prefix
+                  and: {
+                    tags: [
+                      {
+                        key: 'date-month-day',
+                        value: '1'
+                      },
+                      {
+                        key: 'date-month-num',
+                        value: '1'
+                      },
+                    ],
+                  },
                 }, 
                 status: 'Enabled',
-                transitions: storage_rules,
-                abort_incomplete_multipart_upload: {
-                  days_after_initiation: 10 # Remember to change this based on PR reply. 
-                }
+                transitions: [
+                  {
+                    days: 366,
+                    storage_class: 'DEEP_ARCHIVE'
+                  }
+                ]
               }
-            ]
+            ], 
           }
         })
 
