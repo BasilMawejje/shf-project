@@ -138,11 +138,6 @@ namespace :shf do
       aws_client = aws_s3.client
       aws_s3_backup_bucket_name = Backup.s3_backup_bucket # Remember to revert to production bucket
       aws_s3_backup_bucket_full_prefix = Backup.s3_backup_bucket_full_prefix
-      # year = (aws_s3_backup_bucket_full_prefix.split('/')[1]
-      # current_month = aws_s3_backup_bucket_full_prefix.split('/')[2]
-      # prev_month = (aws_s3_backup_bucket_full_prefix.split('/')[2].to_i - 1).to_s
-      # day = (aws_s3_backup_bucket_full_prefix.split('/')[3]
-      # binding.pry
 
       ActivityLogger.open(LogfileNamer.name_for(LOGFILENAME), LOG_FACILITY, 'Add bucket lifecycle configuration') do |log|
         aws_client.put_bucket_lifecycle_configuration({
@@ -151,20 +146,20 @@ namespace :shf do
             rules: [
               {
                 filter: {
-                  prefix: aws_s3_backup_bucket_full_prefix, 
+                  prefix: aws_s3_backup_bucket_full_prefix
                 }, 
                 id: 'Daily backup schedule',
                 status: 'Enabled', 
                 transitions: [
                   {
                     days: 60, 
-                    storage_class: 'STANDARD_IA',
-                  }, 
-                ], 
+                    storage_class: 'STANDARD_IA'
+                  }
+                ]
               },
               {
                 expiration: {
-                  days: 366, 
+                  days: 366
                 }, 
                 id: 'Monthly backup schedule', 
                 filter: {
@@ -177,7 +172,7 @@ namespace :shf do
                 transitions: [
                   {
                     days: 90, 
-                    storage_class: 'GLACIER', 
+                    storage_class: 'GLACIER'
                   }
                 ]
               }, 
@@ -196,9 +191,9 @@ namespace :shf do
                       {
                         key: 'date-month-num',
                         value: '1'
-                      },
-                    ],
-                  },
+                      }
+                    ]
+                  }
                 }, 
                 status: 'Enabled',
                 transitions: [
@@ -208,7 +203,7 @@ namespace :shf do
                   }
                 ]
               }
-            ], 
+            ]
           }
         })
 
