@@ -145,6 +145,9 @@ namespace :shf do
           lifecycle_configuration: {
             rules: [
               {
+                expiration: {
+                  days: 60
+                },
                 filter: {
                   prefix: aws_s3_backup_bucket_full_prefix
                 }, 
@@ -152,7 +155,7 @@ namespace :shf do
                 status: 'Enabled', 
                 transitions: [
                   {
-                    days: 60, 
+                    days: 30, 
                     storage_class: 'STANDARD_IA'
                   }
                 ]
