@@ -30,7 +30,7 @@ class UploadedFile < ApplicationRecord
   belongs_to :shf_application, optional: true
   counter_culture [:user, :shf_application]
 
-  has_attached_file :actual_file
+  has_attached_file :actual_file, default_url: '/assets/photo_unavailable.png'
   validates_attachment :actual_file, content_type: { content_type: ALLOWED_FILE_TYPES.values,
                                                      message: I18n.t('activerecord.errors.models.uploaded_file.attributes.actual_file_file_content_type.invalid_type') },
                        size: { in: 0..5.megabytes,

@@ -32,9 +32,15 @@ class UploadedFilesController < ApplicationController
   end
 
   def create
-    @uploaded_file = UploadedFile.new(description: uploaded_file_params['description'])
-    @uploaded_file.user = current_user
-    @uploaded_file.actual_file = uploaded_file_params['actual_file']
+    if uploaded_file_params['actual_file'].nil?
+      @uploaded_file = UploadedFile.new(actual_file_file_name: 'default.png')
+      set_current_user(@uploaded_file)
+      @uploaded_file.actual_file
+    else
+      @uploaded_file = UploadedFile.new(description: uploaded_file_params['description'])
+      set_current_user(@uploaded_file)
+      @uploaded_file.actual_file = uploaded_file_params['actual_file']
+    end
 
     if params.fetch('_from_user_acct_page', '').blank?
       success_redirect_to_path = user_uploaded_files_path(current_user)
@@ -124,5 +130,9 @@ class UploadedFilesController < ApplicationController
 
   def allowed_file_types
     UploadedFile.allowed_file_types
+  end
+
+  def set_current_user(uploaded_file)
+    uploaded_file.user = current_user
   end
 end
