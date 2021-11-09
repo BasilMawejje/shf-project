@@ -196,6 +196,7 @@ sv:
         filename: &filename Filnamn
         file_size: &file_size Filstorlek
         description: &description  Beskrivning
+        actual_file: &uploaded_file Uppladdad fil
 
       user:
         first_name: &first_name Förnamn

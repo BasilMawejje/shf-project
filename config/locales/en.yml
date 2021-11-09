@@ -197,6 +197,7 @@ en:
         filename: &filename File name
         file_size: &file_size File size
         description: &description  Description
+        actual_file: &uploaded_file Uploaded File
 
       user:
         first_name: &first_name First name
