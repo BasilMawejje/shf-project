@@ -78,3 +78,4 @@ Feature: Member uploads files not associated with a shf application
     And I click on t("save")
     Then I should see t("model_errors.one")
     Then I should see t("activerecord.attributes.uploaded_file.actual_file")
+    And I should not see t("uploaded_files.create.success", file_name: 'biff-image.png')
