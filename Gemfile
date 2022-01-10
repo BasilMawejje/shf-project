@@ -6,7 +6,7 @@ gem 'rails', '~> 5.2.6'
 gem 'bootsnap', require: false
 
 gem 'pg', '~> 1.2'
-gem 'puma', '~> 5.3'
+gem 'puma', '~> 5.5'
 gem 'sass-rails'
 
 gem 'uglifier', '>= 1.3.0'
@@ -30,14 +30,15 @@ gem 'bootstrap-toggle-rails'
 
 gem 'devise'
 gem 'pundit'
-gem "paperclip"
+# gem "paperclip"
+gem "kt-paperclip", "~> 7.0.0"
 
 gem 'routing-filter'   # for handling locale filters around routes
 
 gem 'ransack'
 gem 'city-state'
 gem 'rubyzip', '>= 1.2.1'  # security vulnerability with earlier versions CVE-2017-5946
-gem 'i18n-js', '>= 3.0.0.rc11'
+gem 'i18n-js' #, '>= 3.0.0.rc11'
 
 gem 'will_paginate'
 gem 'bootstrap-will_paginate'
