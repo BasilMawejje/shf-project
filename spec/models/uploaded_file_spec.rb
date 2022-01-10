@@ -79,6 +79,9 @@ RSpec.describe UploadedFile, type: :model do
                     .rejecting('bin', 'exe') }
 
     it { should validate_presence_of(:actual_file) }
+
+    it { should validate_attachment_size(:actual_file).
+                less_than(UploadedFile::MAX_FILE_SIZE_MB.megabytes) }
   end
 
   describe 'Associations' do

@@ -25,6 +25,8 @@ class UploadedFile < ApplicationRecord
     'application/vnd.ms-word.document.macroEnabled.12': 'far fa-file-word'
   }
 
+  MAX_FILE_SIZE_MB = 5
+
 
   belongs_to :user
   belongs_to :shf_application, optional: true
@@ -33,7 +35,7 @@ class UploadedFile < ApplicationRecord
   has_attached_file :actual_file
   validates_attachment :actual_file, content_type: { content_type: ALLOWED_FILE_TYPES.values,
                                                      message: I18n.t('activerecord.errors.models.uploaded_file.attributes.actual_file_file_content_type.invalid_type') },
-                       size: { in: 0..5.megabytes,
+                       size: { in: 0..MAX_FILE_SIZE_MB.megabytes,
                                message: :file_too_large
                        }, presence: true
 =begin
